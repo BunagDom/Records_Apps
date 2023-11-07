@@ -1,0 +1,92 @@
+<?php
+require 'vendor/autoload.php'; 
+
+$host = 'localhost';
+$dbname = 'dump';
+$username = 'root';
+$password = 'root';
+
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Error: " . $e->getMessage());
+}
+
+$faker = Faker\Factory::create('en_PH'); 
+
+
+function generateFutureDate($startDate, $endDate)
+{
+    $timestamp = mt_rand(strtotime($startDate), strtotime($endDate));
+    return date('Y-m-d H:i:s', $timestamp);
+}
+
+
+$employeeRows = 200;
+for ($i = 0; $i < $employeeRows; $i++) {
+    $lastName = $faker->lastName;
+    $firstName = $faker->firstName;
+    $officeId = mt_rand(1, 50); 
+    $address = $faker->address;
+
+    
+    $sql = "INSERT INTO Employee (lastname, firstname, office_id, address) VALUES (:lastname, :firstname, :office_id, :address)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        'lastname' => $lastName,
+        'firstname' => $firstName,
+        'office_id' => $officeId,
+        'address' => $address,
+    ]);
+}
+
+
+$officeRows = 50;
+for ($i = 0; $i < $officeRows; $i++) {
+    $name = $faker->company;
+    $contactNum = $faker->phoneNumber;
+    $email = $faker->email;
+    $address = $faker->streetAddress;
+    $city = $faker->city;
+    $country = 'Philippines';
+    $postal = $faker->postcode;
+
+
+    $sql = "INSERT INTO Office (name, contactnum, email, address, city, country, postal) VALUES (:name, :contactnum, :email, :address, :city, :country, :postal)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        'name' => $name,
+        'contactnum' => $contactNum,
+        'email' => $email,
+        'address' => $address,
+        'city' => $city,
+        'country' => $country,
+        'postal' => $postal,
+    ]);
+}
+
+$transactionRows = 500;
+for ($i = 0; $i < $transactionRows; $i++) {
+    $employeeId = mt_rand(1, 200); 
+    $officeId = mt_rand(1, 50); 
+    $dateLog = generateFutureDate('2023-01-01', '2023-12-31'); 
+    $action = $faker->randomElement(['Create', 'Update', 'Delete']);
+    $remarks = $faker->text;
+    $documentCode = $faker->uuid;
+
+    
+    $sql = "INSERT INTO Transaction (employee_id, office_id, datelog, action, remarks, documentcode) VALUES (:employee_id, :office_id, :datelog, :action, :remarks, :documentcode)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        'employee_id' => $employeeId,
+        'office_id' => $officeId,
+        'datelog' => $dateLog,
+        'action' => $action,
+        'remarks' => $remarks,
+        'documentcode' => $documentCode,
+    ]);
+}
+
+echo "Fake data loaded successfully.\n";
